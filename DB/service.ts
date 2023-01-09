@@ -1,7 +1,10 @@
 import { DocumentDefinition } from "mongoose";
-import City, { cityDocument } from "../models/city";
+import City from "../models/city";
 import currentTemp, { currentTempDocument } from "../models/currentTemp";
 import currentWeather, { currentWeatherDocument } from "../models/currentWeather";
+import auditTemp from "../models/auditTemp";
+import auditWeather from "../models/auditWeather";
+
 
 /**
  * function to get city details
@@ -30,6 +33,10 @@ export function updateCurrentTemperature(cityIdToSearch:number,tempRecUpdate:Doc
     currentTemp.findOneAndUpdate({cityId:cityIdToSearch},tempRecUpdate,{upsert:true})
     //.then(()=>console.log("Temp updated"))
     .catch((err)=>console.log("Error in updating current temp: ",err));
+
+    auditTemp.findOneAndUpdate({cityId:cityIdToSearch},{$push:{records:tempRecUpdate}},{new:true})
+    .catch((err)=>console.log("Error while adding record to audit temp"));
+
 }
 
 /**
@@ -41,6 +48,9 @@ export function updateCurrentWeather(cityIdToSearch:number,wrtRecUpdate:Document
     currentWeather.findOneAndUpdate({cityId:cityIdToSearch},wrtRecUpdate,{upsert:true})
     //.then(()=>console.log("weather updated"))
     .catch((err)=>console.log("Error in updating current weather: ",err));
+
+    auditWeather.findOneAndUpdate({cityId:cityIdToSearch},{$push:{records:wrtRecUpdate}},{new:true})
+    .catch((err)=>console.log("Error while adding record to audit weather"));
 }
 
 /**
@@ -101,6 +111,18 @@ export function createWeatherRecord(owaRec: any){
             sunset: owaRec.sys.sunset
         }
     }
+
+    const auditT={
+        cityId: owaRec.id,
+        cityName:owaRec.name,
+        records:[currTempData]
+    }
+    const auditW={
+        cityId: owaRec.id,
+        cityName:owaRec.name,
+        records:[currWeatherData]
+    }
+
     new City(cityData).save()
     .catch((err)=>{
         console.log("Error in inserting record in city");
@@ -113,6 +135,11 @@ export function createWeatherRecord(owaRec: any){
     .catch((err)=>{
         console.log("Error in inserting record in current weather");
     });
+    new auditTemp(auditT).save()
+    .catch((err)=> console.log("Error in inserting record in audit temp"));
+
+    new auditWeather(auditW).save()
+    .catch((err)=> console.log("Error in inserting record in audit weather"));
 }
 
 // export function insertCity(cityToInsert:DocumentDefinition<cityDocument>){

@@ -21,7 +21,7 @@ export interface currentWeatherDocument extends mongoose.Document{
     }
 }
 
-const currentWeather = new mongoose.Schema({
+export const currentWeatherSchema = new mongoose.Schema({
     cityId: {type:Number},
     cityName: {type:String},
     dt: {type:Number},
@@ -43,4 +43,4 @@ const currentWeather = new mongoose.Schema({
 }) ;
 
 
-export default mongoose.model<currentWeatherDocument>('CurrentWeather',currentWeather);
+export default mongoose.model<currentWeatherDocument>('CurrentWeather',currentWeatherSchema);
