@@ -18,7 +18,7 @@ city : city name you want to search. Optional key by default it will search for 
 There are 5 collections:-
 1) City - holds data related to a city
 2) CurrentTemps - holds current temperature details for a given city
-3) CurrentWeather - holds current weather details for a given city
+3) CurrentWeather - holds current weather details for a given city.
 4) AuditTemps - holds temperature history for a given city.
 5) AuditWeather - holds weather history for a given city.
 
