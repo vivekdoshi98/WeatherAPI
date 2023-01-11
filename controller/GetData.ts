@@ -9,42 +9,46 @@ import * as dbService from "../DB/service";
  * Desc - returns weather data
  */
 const getData =async (req:Request,res:Response) =>{
-    //key city is optional in query - default value Pune
-    let cityToSearch:string=<string>req.query.city || 'Pune';
-        
-    //get data from open weather api
-    let owaRes:AxiosResponse<any, any>;
-    try{
-        owaRes=await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${cityToSearch}&appid=${config.owa.key}`)
-    }
-    catch(err){
-        res.status(404).json({status:404,message:"City not found"});
-        return;
-    }
-    
-    //sending appr. response
-    res.status(200).json(owaRes.data);
+    try{   
+        //key city is optional in query - default value Pune
+        let cityToSearch:string=<string>req.query.city || 'Pune';
 
-    //DB update logic:-
+        //get data from open weather api
+        let owaRes: AxiosResponse<any, any> = await axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${cityToSearch}&appid=${config.owa.key}`);
+        
+        updateDatabase(cityToSearch,owaRes);
+
+        //sending appr. response
+        res.status(200).json(owaRes.data);
+
+        
+    }
+    catch (err) {
+        console.log(err);
+    }
+
+}
+
+async function updateDatabase(cityToSearch:string,owaRes:AxiosResponse<any, any>) {
     //checking if city data present in db
-    const cityRec=await dbService.findCity(cityToSearch);
-    
-    if(cityRec){ 
+    const cityRec = await dbService.findCity(cityToSearch);
+
+    if (cityRec) {
         //city exists in our table
-        
+
         //getting last date time of the weather record
-        const cityTemp=await dbService.findCityTemp(cityRec.cityId);
-        
-        if(cityTemp){
-            const lastDT=cityTemp.dt;
+        const cityTemp = await dbService.findCityTemp(cityRec.cityId);
+
+        if (cityTemp) {
+            const lastDT = cityTemp.dt;
             //comparing owa dt and latest dt of our db
-            if(owaRes.data.dt>lastDT){
+            if (owaRes.data.dt > lastDT) {
                 //new weather details found so updating current details of db
-                const currTempData= {
+                const currTempData = {
                     cityId: owaRes.data.id,
                     cityName: owaRes.data.name,
                     dt: owaRes.data.dt,
-                    weather:{
+                    weather: {
                         id: owaRes.data.weather.id,
                         main: owaRes.data.weather.main,
                         description: owaRes.data.weather.description,
@@ -60,8 +64,8 @@ const getData =async (req:Request,res:Response) =>{
                         humidity: owaRes.data.main.humidity
                     }
                 }
-            
-                const currWeatherData={
+
+                const currWeatherData = {
                     cityId: owaRes.data.id,
                     cityName: owaRes.data.name,
                     dt: owaRes.data.dt,
@@ -76,22 +80,21 @@ const getData =async (req:Request,res:Response) =>{
                     sys: {
                         type: owaRes.data.sys.type,
                         id: owaRes.data.sys.id,
-                        country:owaRes.data.sys.country,
+                        country: owaRes.data.sys.country,
                         sunrise: owaRes.data.sys.sunrise,
                         sunset: owaRes.data.sys.sunset
                     }
                 }
-                dbService.updateCurrentTemperature(cityRec.cityId,currTempData);
-                dbService.updateCurrentWeather(cityRec.cityId,currWeatherData);
+                dbService.updateCurrentTemperature(cityRec.cityId, currTempData);
+                dbService.updateCurrentWeather(cityRec.cityId, currWeatherData);
             }
             //else console.log("already updated");
         }
     }
-    else{ 
+    else {
         //city not present in our db so adding all details
         dbService.createWeatherRecord(owaRes.data);
     }
-    
 }
 
-export default {getData};
+export default { getData };

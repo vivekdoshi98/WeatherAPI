@@ -3,7 +3,7 @@ import {config} from "../config/config";
 mongoose.set('strictQuery',false);
 
 const dbConnect=()=>{
-    return mongoose.connect(config.db.url)
+    return mongoose.connect(config.db.url!)
     .then(()=>{
         console.log("Connected to DB!");
     })

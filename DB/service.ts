@@ -1,7 +1,7 @@
 import { DocumentDefinition } from "mongoose";
 import City from "../models/city";
 import currentTemp, { currentTempDocument } from "../models/currentTemp";
-import currentWeather, { currentWeatherDocument } from "../models/currentWeather";
+import currentWeather, {currentWeatherDocument} from "../models/currentWeather";
 import auditTemp from "../models/auditTemp";
 import auditWeather from "../models/auditWeather";
 
@@ -29,14 +29,15 @@ export function findCityTemp(cityIdToSearch:number){
  * @param cityIdToSearch - city id to search
  * @param tempRecUpdate  - obj with updated record
  */
-export function updateCurrentTemperature(cityIdToSearch:number,tempRecUpdate:DocumentDefinition<currentTempDocument>){
-    currentTemp.findOneAndUpdate({cityId:cityIdToSearch},tempRecUpdate,{upsert:true})
-    //.then(()=>console.log("Temp updated"))
-    .catch((err)=>console.log("Error in updating current temp: ",err));
+export function updateCurrentTemperature(cityIdToSearch: number,tempRecUpdate: DocumentDefinition<currentTempDocument>) {
+  try {
+    currentTemp.findOneAndUpdate({ cityId: cityIdToSearch }, tempRecUpdate, {upsert: true,});
 
-    auditTemp.findOneAndUpdate({cityId:cityIdToSearch},{$push:{records:tempRecUpdate}},{new:true})
-    .catch((err)=>console.log("Error while adding record to audit temp"));
+    auditTemp.findOneAndUpdate({ cityId: cityIdToSearch },{ $push: { records: tempRecUpdate } },{ new: true });
 
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /**
@@ -44,102 +45,95 @@ export function updateCurrentTemperature(cityIdToSearch:number,tempRecUpdate:Doc
  * @param cityIdToSearch - city id to search
  * @param wrtRecUpdate - obj with updated record
  */
-export function updateCurrentWeather(cityIdToSearch:number,wrtRecUpdate:DocumentDefinition<currentWeatherDocument>){
-    currentWeather.findOneAndUpdate({cityId:cityIdToSearch},wrtRecUpdate,{upsert:true})
-    //.then(()=>console.log("weather updated"))
-    .catch((err)=>console.log("Error in updating current weather: ",err));
+export function updateCurrentWeather(cityIdToSearch: number,wrtRecUpdate: DocumentDefinition<currentWeatherDocument>) {
+  try {
+    currentWeather.findOneAndUpdate({ cityId: cityIdToSearch }, wrtRecUpdate, {upsert: true,});
 
-    auditWeather.findOneAndUpdate({cityId:cityIdToSearch},{$push:{records:wrtRecUpdate}},{new:true})
-    .catch((err)=>console.log("Error while adding record to audit weather"));
+    auditWeather.findOneAndUpdate({ cityId: cityIdToSearch },{ $push: { records: wrtRecUpdate } },{ new: true });
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 /**
- * function to insert data in all collections 
+ * function to insert data in all collections
  * @param owaRec - combined object holding data to be inserted
  */
-export function createWeatherRecord(owaRec: any){
-    const cityData= {
-        cityName:owaRec.name,
-        cityId:owaRec.id,
-        timezone:owaRec.timezone,
-        cod:owaRec.cod,
-        countryId:owaRec.sys.country,
-        coord:{
-            lat:owaRec.coord.lat,
-            lon:owaRec.coord.lon
-        }
-    }
+export function createWeatherRecord(owaRec: any) {
+  try {
+    const cityData = {
+      cityName: owaRec.name,
+      cityId: owaRec.id,
+      timezone: owaRec.timezone,
+      cod: owaRec.cod,
+      countryId: owaRec.sys.country,
+      coord: {
+        lat: owaRec.coord.lat,
+        lon: owaRec.coord.lon,
+      },
+    };
 
-    const currTempData= {
-        cityId: owaRec.id,
-        cityName:owaRec.name,
-        dt: owaRec.dt,
-        weather:{
-            id: owaRec.weather.id,
-            main: owaRec.weather.main,
-            description: owaRec.weather.description,
-            icon: owaRec.weather.icon
-        },
-        base: owaRec.base,
-        main: {
-            temp: owaRec.main.temp,
-            feels_like: owaRec.main.feels_like,
-            temp_min: owaRec.main.temp_min,
-            temp_max: owaRec.main.temp_max,
-            pressure: owaRec.main.pressure,
-            humidity: owaRec.main.humidity
-        }
-    }
+    const currTempData = {
+      cityId: owaRec.id,
+      cityName: owaRec.name,
+      dt: owaRec.dt,
+      weather: {
+        id: owaRec.weather.id,
+        main: owaRec.weather.main,
+        description: owaRec.weather.description,
+        icon: owaRec.weather.icon,
+      },
+      base: owaRec.base,
+      main: {
+        temp: owaRec.main.temp,
+        feels_like: owaRec.main.feels_like,
+        temp_min: owaRec.main.temp_min,
+        temp_max: owaRec.main.temp_max,
+        pressure: owaRec.main.pressure,
+        humidity: owaRec.main.humidity,
+      },
+    };
 
-    const currWeatherData={
-        cityId: owaRec.id,
-        cityName:owaRec.name,
-        dt: owaRec.dt,
-        visibility: owaRec.visibility,
-        wind: {
-            speed: owaRec.wind.speed,
-            deg: owaRec.wind.deg,
-        },
-        clouds: {
-            all: owaRec.clouds.all,
-        },
-        sys: {
-            type: owaRec.sys.type,
-            id: owaRec.sys.id,
-            country:owaRec.sys.country,
-            sunrise: owaRec.sys.sunrise,
-            sunset: owaRec.sys.sunset
-        }
-    }
+    const currWeatherData = {
+      cityId: owaRec.id,
+      cityName: owaRec.name,
+      dt: owaRec.dt,
+      visibility: owaRec.visibility,
+      wind: {
+        speed: owaRec.wind.speed,
+        deg: owaRec.wind.deg,
+      },
+      clouds: {
+        all: owaRec.clouds.all,
+      },
+      sys: {
+        type: owaRec.sys.type,
+        id: owaRec.sys.id,
+        country: owaRec.sys.country,
+        sunrise: owaRec.sys.sunrise,
+        sunset: owaRec.sys.sunset,
+      },
+    };
 
-    const auditT={
-        cityId: owaRec.id,
-        cityName:owaRec.name,
-        records:[currTempData]
-    }
-    const auditW={
-        cityId: owaRec.id,
-        cityName:owaRec.name,
-        records:[currWeatherData]
-    }
+    const auditT = {
+      cityId: owaRec.id,
+      cityName: owaRec.name,
+      records: [currTempData],
+    };
+    const auditW = {
+      cityId: owaRec.id,
+      cityName: owaRec.name,
+      records: [currWeatherData],
+    };
 
-    new City(cityData).save()
-    .catch((err)=>{
-        console.log("Error in inserting record in city");
-    });
-    new currentTemp(currTempData).save()
-    .catch((err)=>{
-        console.log("Error in inserting record in current temp");
-    });
-    new currentWeather(currWeatherData).save()
-    .catch((err)=>{
-        console.log("Error in inserting record in current weather");
-    });
-    new auditTemp(auditT).save()
-    .catch((err)=> console.log("Error in inserting record in audit temp"));
-
-    new auditWeather(auditW).save()
-    .catch((err)=> console.log("Error in inserting record in audit weather"));
+    new City(cityData).save();
+    new currentTemp(currTempData).save();
+    new currentWeather(currWeatherData).save();
+    new auditTemp(auditT).save();
+    new auditWeather(auditW).save();
+  } catch (err) {
+    console.log(err);
+  }
 }
 
 // export function insertCity(cityToInsert:DocumentDefinition<cityDocument>){
